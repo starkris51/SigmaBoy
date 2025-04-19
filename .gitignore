@@ -1,0 +1,13 @@
+CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
+GameBoy
+roms
+saves
+.cache
+build.sh
+Makefile
+.DS_Store
+bootrom/bin
+bootrom/obj
+dist

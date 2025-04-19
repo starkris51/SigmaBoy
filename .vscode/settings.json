@@ -1,0 +1,11 @@
+{
+    "code-runner.executorMap": {
+        "cpp": "cd $workspaceRoot/dist && cmake --build . && ./app.exe"
+    },
+    "code-runner.runInTerminal": true,
+    "files.associations": {
+        "iostream": "cpp",
+        "ostream": "cpp"
+    },
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/dist/compile_commands.json"
+}
