@@ -4,7 +4,8 @@ enum ColorModes
 {
     NORMAL = 0,
     RETRO = 1,
-    GRAY = 2
+    GRAY = 2,
+    SIGMA = 3
 };
 
 struct Status

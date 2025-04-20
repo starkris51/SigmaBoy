@@ -1,7 +1,10 @@
 #pragma once
 #include <SDL3/SDL.h>
 #include "cartridge.h"
+#include "cpu.h"
+#include "memory_map.h"
 #include "status.h"
+#include "registers.h"
 
 class Emulator
 {
@@ -23,19 +26,22 @@ public:
 
     // SDL
     bool ConfigureWindow();
-    void Run();
     void Cleanup();
 
     // Emulator Functions
     void LoadCartridge(Cartridge *cartridge);
     static void OnFileAdded(void *userdata, const char *const *filelist, int filter);
+    void Run();
 
     // Emulator Hardware
     Status status;
+
+    Registers registers;
     Cartridge *cartridge;
+    MemoryMap *memory;
+    CPU *cpu;
 
 private:
     void HandleEvents();
-    void Update();
-    void Render();
+    void RunStep();
 };

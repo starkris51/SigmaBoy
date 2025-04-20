@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 
-Emulator::Emulator() : window(nullptr), renderer(nullptr), screen(nullptr), isEmulatorWindowOpen(false), cartridge(nullptr) {}
+Emulator::Emulator() : window(nullptr), renderer(nullptr), screen(nullptr), isEmulatorWindowOpen(false), cartridge(nullptr), memory(nullptr), cpu(nullptr) {}
 
 Emulator::~Emulator()
 {
@@ -54,6 +54,27 @@ void Emulator::OnFileAdded(void *userdata, const char *const *filelist, int filt
 void Emulator::LoadCartridge(Cartridge *cartridge)
 {
     this->cartridge = cartridge;
+    memory = new MemoryMap(cartridge);
+
+    cpu = new CPU(memory, &registers);
+
+    status.isRunning = true;
+}
+
+void Emulator::RunStep()
+{
+    if (!status.isPaused || status.doStep)
+    {
+        cpu->Step();
+    }
+
+    // status.doStep = false;
+
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+
+    SDL_RenderClear(renderer);
+
+    SDL_RenderPresent(renderer);
 }
 
 void Emulator::Run()
@@ -61,9 +82,12 @@ void Emulator::Run()
     isEmulatorWindowOpen = true;
     while (isEmulatorWindowOpen)
     {
-        HandleEvents();
-        Update();
-        Render();
+        HandleEvents(); // Window inputs
+
+        if (status.isRunning) // Emulator Running
+        {
+            this->RunStep();
+        }
     }
 }
 
@@ -86,21 +110,6 @@ void Emulator::HandleEvents()
             break;
         }
     }
-}
-
-void Emulator::Update()
-{
-    // Update emulator state
-}
-
-void Emulator::Render()
-{
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
-
-    // Render GameBoy screen here
-
-    SDL_RenderPresent(renderer);
 }
 
 void Emulator::Cleanup()
