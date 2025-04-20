@@ -4,7 +4,7 @@ int main(int argc, char *argv[])
 {
     Emulator emulator;
 
-    if (!emulator.Initialize())
+    if (!emulator.ConfigureWindow())
     {
         return 1;
     }

@@ -1,15 +1,15 @@
 #include "emulator.h"
 #include <iostream>
-#include <shobjidl.h>
+#include <string>
 
-Emulator::Emulator() : window(nullptr), renderer(nullptr), screen(nullptr), running(false) {}
+Emulator::Emulator() : window(nullptr), renderer(nullptr), screen(nullptr), isEmulatorWindowOpen(false), cartridge(nullptr) {}
 
 Emulator::~Emulator()
 {
     Cleanup();
 }
 
-bool Emulator::Initialize()
+bool Emulator::ConfigureWindow()
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -38,10 +38,28 @@ bool Emulator::Initialize()
     return true;
 }
 
+void Emulator::OnFileAdded(void *userdata, const char *const *filelist, int filter)
+{
+    if (filelist && filelist[0])
+    {
+        std::string rom = filelist[0];
+        std::cout << "Loading ROM from: " << rom << std::endl;
+
+        Emulator *emulator = static_cast<Emulator *>(userdata);
+        Cartridge *cartridge = new Cartridge(rom);
+        emulator->LoadCartridge(cartridge);
+    }
+}
+
+void Emulator::LoadCartridge(Cartridge *cartridge)
+{
+    this->cartridge = cartridge;
+}
+
 void Emulator::Run()
 {
-    running = true;
-    while (running)
+    isEmulatorWindowOpen = true;
+    while (isEmulatorWindowOpen)
     {
         HandleEvents();
         Update();
@@ -57,10 +75,14 @@ void Emulator::HandleEvents()
         switch (event.type)
         {
         case SDL_EVENT_QUIT:
-            running = false;
+            isEmulatorWindowOpen = false;
             break;
-        case SDL_EVENT_KEY_DOWN:
-            // Handle key presses
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            if (event.button.button == SDL_BUTTON_RIGHT) // Right-click
+            {
+                SDL_ShowOpenFileDialog(OnFileAdded,
+                                       this, window, filters, 1, 0, 0);
+            }
             break;
         }
     }

@@ -9,7 +9,7 @@ add_executable(app ${SOURCES})
 
 find_package(SDL3 REQUIRED)
 target_link_libraries(app PRIVATE SDL3::SDL3)
-target_include_directories(app PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(app PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(app PRIVATE SDL_MAIN_USE_CALLBACKS)
 target_link_options(app PRIVATE -static)
 
