@@ -1,14 +1,14 @@
 #include "registers.h"
-#include "memory_map.h"
+#include "mmu.h"
 
 class CPU
 {
 public:
-    CPU(MemoryMap *memory, Registers *registers);
+    CPU(MMU *memory, Registers *registers);
 
-    MemoryMap *memory;
+    MMU *memory;
     Registers *registers;
 
     void Execute(uint8_t opcode);
-    int Step();
+    void Step();
 };

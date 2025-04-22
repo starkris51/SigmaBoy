@@ -17,7 +17,6 @@ class Cartridge
 {
 public:
     Cartridge(std::string rom);
-    ~Cartridge();
 
     uint8_t ReadROM(uint16_t address) const;
     void SwitchBank(uint8_t bank);

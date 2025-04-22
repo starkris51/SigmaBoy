@@ -20,11 +20,6 @@ Cartridge::Cartridge(std::string rom)
     romData = std::vector<uint8_t>(size);
     ROM.read(reinterpret_cast<char *>(romData.data()), size);
 
-    if (romData[0x0100] == 0xCE || romData[0x0101] == 0xED)
-    {
-        throw std::runtime_error("Invalid Game Boy header magic number.");
-    }
-
     const std::vector<uint8_t> nintendoLogo = {
         0xCE, 0xED, 0x66, 0x66, 0xCC, 0x0D, 0x00, 0x0B,
         0x03, 0x73, 0x00, 0x83, 0x00, 0x0C, 0x00, 0x0D,
@@ -47,6 +42,8 @@ Cartridge::Cartridge(std::string rom)
     rom_title = std::string(romData.begin() + 0x134, romData.begin() + 0x143);
 
     std::cout << "Rom Title: " << rom_title << std::endl;
+
+    DetectMBC();
 }
 
 void Cartridge::DetectMBC()

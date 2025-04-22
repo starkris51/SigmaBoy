@@ -2,7 +2,7 @@
 #include <SDL3/SDL.h>
 #include "cartridge.h"
 #include "cpu.h"
-#include "memory_map.h"
+#include "mmu.h"
 #include "status.h"
 #include "registers.h"
 
@@ -38,7 +38,7 @@ public:
 
     Registers registers;
     Cartridge *cartridge;
-    MemoryMap *memory;
+    MMU *memory;
     CPU *cpu;
 
 private:

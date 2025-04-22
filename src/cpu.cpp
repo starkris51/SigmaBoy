@@ -1,6 +1,6 @@
 #include "cpu.h"
 
-CPU::CPU(MemoryMap *memory, Registers *registers) : memory(memory), registers(registers)
+CPU::CPU(MMU *memory, Registers *registers) : memory(memory), registers(registers)
 {
     registers->pc = 0x0100;
 }
@@ -11,7 +11,7 @@ void CPU::Execute(uint8_t opcode)
 
     switch (opcode)
     {
-    case 0x00: // NOP
+    case 0x00:
         break;
     case 0x01:
         registers->c = memory->Read(registers->pc++);
@@ -29,23 +29,23 @@ void CPU::Execute(uint8_t opcode)
     case 0x05:
         registers->b--;
         break;
-    case 0x3E: // Load data to that fresh Accumulator
+    case 0x06:
+        registers->b = memory->Read(registers->pc++);
+        break; 
+    case 0x07:
+        registers->a = (registers->a << 1) | (registers->a >> 7);
+        break;
+    case 0x3E:
         registers->a = memory->Read(registers->pc++);
         break;
-    case 0x06: // Load that data to B register
-        registers->b = memory->Read(registers->pc++);
-        break;
-
     default:
         printf("Unknown opcode: 0x%02X\n", opcode);
         break;
     }
 }
 
-int CPU::Step()
+void CPU::Step()
 {
     uint8_t opcode = memory->Read(registers->pc++);
     Execute(opcode);
-
-    return 4;
 }

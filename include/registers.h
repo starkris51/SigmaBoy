@@ -4,6 +4,13 @@
 #include <fstream>
 #include <iostream>
 
+enum Flag : uint8_t {
+    Z = 1 << 7, // Zero
+    N = 1 << 6, // Subtract
+    H = 1 << 5, // Half Carry
+    C = 1 << 4  // Carry
+};
+
 class Registers
 {
 public:

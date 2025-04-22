@@ -1,4 +1,5 @@
 #include "emulator.h"
+#include "mmu.h"
 #include <iostream>
 #include <string>
 
@@ -54,7 +55,7 @@ void Emulator::OnFileAdded(void *userdata, const char *const *filelist, int filt
 void Emulator::LoadCartridge(Cartridge *cartridge)
 {
     this->cartridge = cartridge;
-    memory = new MemoryMap(cartridge);
+    memory = new MMU(cartridge);
 
     cpu = new CPU(memory, &registers);
 
