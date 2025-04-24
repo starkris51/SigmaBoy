@@ -68,4 +68,9 @@ public:
             uint16_t hl;
         };
     };
+
+    void SetFlag(Flag flag) { f |= flag; }
+    void ClearFlag(Flag flag) { f &= ~flag; }
+    bool IsFlagSet(Flag flag) const { return (f & flag) != 0; }
+    void WriteFlag(Flag flag, bool set) { set ? SetFlag(flag) : ClearFlag(flag); }
 };

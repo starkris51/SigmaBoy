@@ -44,6 +44,39 @@ void CPU::Execute(uint8_t opcode)
     }
 }
 
+void CPU::Add(uint8_t value)
+{
+    uint16_t result = registers->a + value;
+
+    registers->WriteFlag(Flag::Z, (result & 0xFF) == 0);
+    registers->WriteFlag(Flag::N, false);
+    registers->WriteFlag(Flag::H, ((registers->a & 0xF) + (value & 0xF)) > 0xF);
+    registers->WriteFlag(Flag::C, result > 0xFF);
+
+    registers->a = result & 0xFF;
+}
+
+void CPU::AddHL(uint16_t value)
+{
+    uint32_t result = registers->hl + value;
+
+    registers->WriteFlag(Flag::N, false);
+    registers->WriteFlag(Flag::H, ((registers->hl & 0xFFF) + (value & 0xFFF)) > 0xFFF);
+    registers->WriteFlag(Flag::C, result > 0xFFFF);
+
+    registers->hl = result & 0xFFFF;
+}
+
+void CPU::Rl(uint8_t &value)
+{
+ 
+}
+
+void CPU::Rlc(uint8_t &value)
+{
+
+}
+
 void CPU::Step()
 {
     uint8_t opcode = memory->Read(registers->pc++);
