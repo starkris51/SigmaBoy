@@ -36,10 +36,9 @@ Cartridge::Cartridge(std::string rom)
     if (size % (16 * 1024) != 0)
     {
         std::cout << "Size must be a multiple of 16 KB" << std::endl;
-        return;
     }
 
-    rom_title = std::string(romData.begin() + 0x134, romData.begin() + 0x143);
+    rom_title = std::string(romData.begin() + 0x134, romData.begin() + 0x144);
 
     std::cout << "Rom Title: " << rom_title << std::endl;
 

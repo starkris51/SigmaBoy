@@ -54,10 +54,28 @@ void Emulator::OnFileAdded(void *userdata, const char *const *filelist, int filt
 
 void Emulator::LoadCartridge(Cartridge *cartridge)
 {
+    // Cleanup previous components
+    if (cartridge)
+    {
+        delete this->cartridge;
+        this->cartridge = nullptr;
+    }
+    if (memory)
+    {
+        delete memory;
+        memory = nullptr;
+    }
+    if (cpu)
+    {
+        delete cpu;
+        cpu = nullptr;
+    }
+
     this->cartridge = cartridge;
     memory = new MMU(cartridge);
-
     cpu = new CPU(memory, &registers);
+
+    SDL_SetWindowTitle(window, cartridge->GetTitle().c_str());
 
     status.isRunning = true;
 }
@@ -115,6 +133,22 @@ void Emulator::HandleEvents()
 
 void Emulator::Cleanup()
 {
+    if (this->cartridge)
+    {
+        delete this->cartridge;
+        this->cartridge = nullptr;
+    }
+    if (cpu)
+    {
+        delete cpu;
+        cpu = nullptr;
+    }
+    if (memory)
+    {
+        delete memory;
+        memory = nullptr;
+    }
+
     if (renderer)
     {
         SDL_DestroyRenderer(renderer);

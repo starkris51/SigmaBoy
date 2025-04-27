@@ -1,3 +1,4 @@
+#include <SDL3/SDL_timer.h>
 #include "registers.h"
 #include "mmu.h"
 
@@ -9,7 +10,13 @@ public:
     MMU *memory;
     Registers *registers;
 
-    void Execute(uint8_t opcode);
+    uint8_t cycles = 0;
+
+    const double CPU_CLOCK_SPEED = 4194304.0; // in Hz
+    const double TARGET_FRAMERATE = 59.7275;  // Game Boy frame rate (in Hz)
+    const double CYCLES_PER_FRAME = CPU_CLOCK_SPEED / TARGET_FRAMERATE;
+
+    int Execute(uint8_t opcode);
     void Step();
 
     // CPU Instructions
@@ -28,6 +35,8 @@ public:
     void Rst(uint8_t vector);
     void Push(uint16_t value);
     void Pop(uint16_t &value);
-    void Rlc(uint8_t &value);
-    void Rl(uint8_t &value);
+    void Rl(uint8_t &value, bool isPrefixCB);
+    void Rlc(uint8_t &value, bool isPrefixCB);
+    void Rr(uint8_t &value, bool isPrefixCB);
+    void Rrc(uint8_t &value, bool isPrefixCB);
 };
