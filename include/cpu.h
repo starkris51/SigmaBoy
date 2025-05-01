@@ -11,13 +11,11 @@ public:
     Registers *registers;
 
     uint8_t cycles = 0;
-
-    const double CPU_CLOCK_SPEED = 4194304.0; // in Hz
-    const double TARGET_FRAMERATE = 59.7275;  // Game Boy frame rate (in Hz)
-    const double CYCLES_PER_FRAME = CPU_CLOCK_SPEED / TARGET_FRAMERATE;
+    bool isStopped = false;
+    bool isHalted = false;
 
     int Execute(uint8_t opcode);
-    void Step();
+    int Step();
 
     // CPU Instructions
     void Add(uint8_t value);

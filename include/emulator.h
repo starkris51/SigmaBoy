@@ -15,6 +15,7 @@ private:
     SDL_Surface *screen;
     const SDL_DialogFileFilter filters[1] = {{"Gameboy File", "*"}};
     bool isEmulatorWindowOpen;
+    const double frameDurationMs = 1000.0 / 59.7275;
 
     static const int SCREEN_WIDTH = 160;
     static const int SCREEN_HEIGHT = 144;

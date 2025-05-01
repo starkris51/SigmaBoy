@@ -84,7 +84,7 @@ void Emulator::RunStep()
 {
     if (!status.isPaused || status.doStep)
     {
-        cpu->Step();
+        int cycle = cpu->Step();
     }
 
     // status.doStep = false;
@@ -101,11 +101,21 @@ void Emulator::Run()
     isEmulatorWindowOpen = true;
     while (isEmulatorWindowOpen)
     {
+        uint32_t frameStart = SDL_GetTicks();
+
         HandleEvents(); // Window inputs
 
         if (status.isRunning) // Emulator Running
         {
             this->RunStep();
+        }
+
+        uint32_t frameEnd = SDL_GetTicks();
+        uint32_t elapsed = frameEnd - frameStart;
+        if (elapsed < frameDurationMs)
+        {
+            uint32_t remaining = frameDurationMs - elapsed;
+            SDL_Delay(remaining);
         }
     }
 }
