@@ -342,12 +342,13 @@ void CPU::Sub(uint8_t value)
 void CPU::Sbc(uint8_t value)
 {
     bool carry = registers->IsFlagSet(Flag::C);
+    uint8_t thatValueWithCarry = value + carry;
     uint16_t result = registers->a - value - carry;
 
     registers->WriteFlag(Flag::Z, (result & 0xFF) == 0);
     registers->WriteFlag(Flag::N, true);
-    registers->WriteFlag(Flag::H, (registers->a & 0xF) < (value & 0xF) + carry);
-    registers->WriteFlag(Flag::C, value + carry > registers->a);
+    registers->WriteFlag(Flag::H, (registers->a & 0xF) < (thatValueWithCarry & 0xF));
+    registers->WriteFlag(Flag::C, thatValueWithCarry > registers->a);
 
     registers->a = result & 0xFF;
 }
