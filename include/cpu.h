@@ -20,7 +20,9 @@ public:
     // CPU Instructions
     void Add(uint8_t value);
     void AddHL(uint16_t value);
+    void Adc(uint8_t value);
     void Sub(uint8_t value);
+    void Sbc(uint8_t value);
     void Inc(uint8_t &value);
     void Dec(uint8_t &value);
     void And(uint8_t value);

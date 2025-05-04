@@ -11,6 +11,8 @@ int CPU::Execute(uint8_t opcode)
     uint8_t low, high;
     uint16_t address;
     int8_t offset;
+    uint8_t correction;
+    bool setC;
     printf("PC: %04X, Opcode: %02X\n", registers->pc - 1, opcode);
 
     switch (opcode)
@@ -148,31 +150,140 @@ int CPU::Execute(uint8_t opcode)
         registers->h = memory->Read(registers->pc++);
         return 8; // LD H, n8
     case 0x27:
-        if (registers->IsFlagSet(Flag::N))
+        correction = 0;
+        setC = false;
+
+        if (!registers->IsFlagSet(Flag::N))
         {
+            if (registers->IsFlagSet(Flag::H) || (registers->a & 0x0F) > 0x09)
+                correction |= 0x06;
             if (registers->IsFlagSet(Flag::C) || registers->a > 0x99)
             {
-                registers->a -= 0x60;
-                registers->WriteFlag(Flag::C, true);
+                correction |= 0x60;
+                setC = true;
             }
-            if (registers->IsFlagSet(Flag::H) || (registers->a & 0x0F) > 0x09)
-            {
-                registers->a -= 0x06;
-            }
+            registers->a += correction;
         }
         else
         {
-            if (registers->IsFlagSet(Flag::C) || registers->a > 0x99)
-            {
-                registers->a += 0x60;
-                registers->WriteFlag(Flag::C, true);
-            }
-            if (registers->IsFlagSet(Flag::H) || (registers->a & 0x0F) > 0x09)
-            {
-                registers->a += 0x06;
-            }
+            if (registers->IsFlagSet(Flag::H))
+                correction |= 0x06;
+            if (registers->IsFlagSet(Flag::C))
+                correction |= 0x60;
+            registers->a -= correction;
         }
+
+        registers->WriteFlag(Flag::Z, registers->a == 0);
+        registers->WriteFlag(Flag::H, false);
+        if (setC)
+            registers->WriteFlag(Flag::C, true);
+
         return 4; // DAA
+    case 0x28:
+        offset = static_cast<int8_t>(memory->Read(registers->pc++));
+        if (registers->IsFlagSet(Flag::Z))
+        {
+            registers->pc += offset;
+            return 12;
+        }
+        return 8; // JR Z, e
+    case 0x29:
+        AddHL(registers->hl);
+        return 8; // ADD HL, HL
+    case 0x2A:
+        registers->a = memory->Read(registers->hl);
+        registers->hl++;
+        return 8; // LD A, (HL+)
+    case 0x2B:
+        registers->hl--;
+        return 8; // DEC HL
+    case 0x2C:
+        Inc(registers->l);
+        return 4; // INC L
+    case 0x2D:
+        Dec(registers->l);
+        return 4; // DEC L
+    case 0x2E:
+        registers->l = memory->Read(registers->pc++);
+        return 8; // LD L, n8
+    case 0x2F:
+        registers->a = ~registers->a;
+        registers->WriteFlag(Flag::N, true);
+        registers->WriteFlag(Flag::H, true);
+        return 4; // CPL
+    case 0x30:
+        offset = static_cast<int8_t>(memory->Read(registers->pc++));
+        if (!registers->IsFlagSet(Flag::C))
+        {
+            registers->pc += offset;
+            return 12;
+        }
+        return 8; // JR NC, e
+    case 0x31:
+        low = memory->Read(registers->pc++);
+        high = memory->Read(registers->pc++);
+
+        registers->sp = (high << 8) | low;
+        return 12; // LD SP, n16
+    case 0x32:
+        memory->Write(registers->hl, registers->a);
+        registers->hl--;
+        return 8; // LD (HL-), A
+    case 0x33:
+        registers->sp++;
+        return 8; // INC SP
+    case 0x34:
+        memory->Write(registers->hl, memory->Read(registers->hl) + 1);
+        return 12; // INC (HL)
+    case 0x35:
+        memory->Write(registers->hl, memory->Read(registers->hl) - 1);
+        return 12; // DEC (HL)
+    case 0x36:
+        memory->Write(registers->hl, memory->Read(registers->pc++));
+        return 12; // LD (HL), n8
+    case 0x37:
+        registers->WriteFlag(Flag::N, false);
+        registers->WriteFlag(Flag::H, false);
+        registers->WriteFlag(Flag::C, true);
+        return 4; // SCF
+    case 0x38:
+        offset = static_cast<int8_t>(memory->Read(registers->pc++));
+        if (registers->IsFlagSet(Flag::C))
+        {
+            registers->pc += offset;
+            return 12;
+        }
+        return 8; // JR C, e
+    case 0x39:
+        AddHL(registers->sp);
+        return 8; // ADD HL, SP
+    case 0x3A:
+        registers->a = memory->Read(registers->hl);
+        registers->hl--;
+        return 8; // LD A, (HL-)
+    case 0x3B:
+        registers->sp--;
+        return 8; // DEC SP
+    case 0x3C:
+        Inc(registers->a);
+        return 4; // INC A
+    case 0x3D:
+        Dec(registers->a);
+        return 4; // DEC A
+    case 0x3E:
+        registers->a = memory->Read(registers->pc++);
+        return 8; // LD A, n8
+    case 0x3F:
+        registers->WriteFlag(Flag::N, false);
+        registers->WriteFlag(Flag::H, false);
+        registers->WriteFlag(Flag::C, !registers->IsFlagSet(Flag::C));
+        return 4; // CCF
+    case 0x40:
+        // This instruction does nothing lmao
+        return 4; // LD B, B
+    case 0x41:
+        registers->b = registers->c;
+        return 4; // LD B, C
     default:
         printf("Unknown opcode: 0x%02X\n", opcode);
         return 0; // Unknown opcode
@@ -201,6 +312,44 @@ void CPU::AddHL(uint16_t value)
     registers->WriteFlag(Flag::C, result > 0xFFFF);
 
     registers->hl = result & 0xFFFF;
+}
+
+void CPU::Adc(uint8_t value)
+{
+    bool carry = registers->IsFlagSet(Flag::C);
+    uint16_t result = registers->a + value + carry;
+
+    registers->WriteFlag(Flag::Z, (result & 0xFF) == 0);
+    registers->WriteFlag(Flag::N, false);
+    registers->WriteFlag(Flag::H, ((registers->a & 0xF) + (value & 0xF) + carry) > 0xF);
+    registers->WriteFlag(Flag::C, result > 0xFF);
+
+    registers->a = result & 0xFF;
+}
+
+void CPU::Sub(uint8_t value)
+{
+    uint16_t result = registers->a - value;
+
+    registers->WriteFlag(Flag::Z, (result & 0xFF) == 0);
+    registers->WriteFlag(Flag::N, true);
+    registers->WriteFlag(Flag::H, (registers->a & 0xF) < (value & 0xF));
+    registers->WriteFlag(Flag::C, value > registers->a);
+
+    registers->a = result & 0xFF;
+}
+
+void CPU::Sbc(uint8_t value)
+{
+    bool carry = registers->IsFlagSet(Flag::C);
+    uint16_t result = registers->a - value - carry;
+
+    registers->WriteFlag(Flag::Z, (result & 0xFF) == 0);
+    registers->WriteFlag(Flag::N, true);
+    registers->WriteFlag(Flag::H, (registers->a & 0xF) < (value & 0xF) + carry);
+    registers->WriteFlag(Flag::C, value + carry > registers->a);
+
+    registers->a = result & 0xFF;
 }
 
 void CPU::Inc(uint8_t &value)
