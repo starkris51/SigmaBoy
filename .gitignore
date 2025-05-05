@@ -11,3 +11,4 @@ Makefile
 bootrom/bin
 bootrom/obj
 dist
+build

@@ -10,11 +10,16 @@ public:
     MMU *memory;
     Registers *registers;
 
+    bool enableInterruptsNextInstruction = false;
+
+    bool ime = false;
+
     uint8_t cycles = 0;
     bool isStopped = false;
     bool isHalted = false;
 
     int Execute(uint8_t opcode);
+    void CheckInterrupts();
     int Step();
 
     // CPU Instructions
@@ -28,13 +33,7 @@ public:
     void And(uint8_t value);
     void Or(uint8_t value);
     void Xor(uint8_t value);
-    void Cmp(uint8_t value);
-    void Jump(uint16_t address);
-    void Call(uint16_t address);
-    void Ret();
-    void Rst(uint8_t vector);
-    void Push(uint16_t value);
-    void Pop(uint16_t &value);
+    void Cp(uint8_t value);
     void Rl(uint8_t &value, bool isPrefixCB);
     void Rlc(uint8_t &value, bool isPrefixCB);
     void Rr(uint8_t &value, bool isPrefixCB);
