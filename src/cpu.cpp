@@ -740,9 +740,8 @@ int CPU::Execute(uint8_t opcode)
         }
         return 12; // JP Z, a16
     case 0xCB:
-        // Not implemented yet
-        printf("PREFIX CB not implemented\n");
-        return 0; // PREFIX CB
+        opcode = memory->Read(registers->pc++);
+        return ExecuteCB(opcode); // PREFIX CB
     case 0xCC:
         low = memory->Read(registers->pc++);
         high = memory->Read(registers->pc++);
@@ -828,7 +827,7 @@ int CPU::Execute(uint8_t opcode)
     case 0xD9:
         registers->pc = memory->Read(registers->sp++);
         registers->pc |= memory->Read(registers->sp++) << 8;
-        // TODO: Enable interrupts
+        enableInterruptsNextInstruction = true;
         return 16; // RETI
     case 0xDA:
         low = memory->Read(registers->pc++);
@@ -920,9 +919,9 @@ int CPU::Execute(uint8_t opcode)
     case 0xF2:
         registers->a = memory->Read(0xFF00 + registers->c);
         return 8; // LD A,(C)
-    case 0xF3:    // DI
-        // TODO: Disable interrupts
-        return 4;
+    case 0xF3:
+        enableInterruptsNextInstruction = false;
+        return 4; // DI
     case 0xF5:
         memory->Write(registers->sp--, registers->a);
         memory->Write(registers->sp--, registers->f);
@@ -979,6 +978,843 @@ int CPU::Execute(uint8_t opcode)
         return 0; // Unknown opcode
     }
     return 0; // Default return value
+}
+
+int CPU::ExecuteCB(uint8_t opcode)
+{
+    uint8_t value;
+
+    switch (opcode)
+    {
+    case 0x00:
+        Rlc(registers->b, true);
+        return 8; // RLC B
+    case 0x01:
+        Rlc(registers->c, true);
+        return 8; // RLC C
+    case 0x02:
+        Rlc(registers->d, true);
+        return 8; // RLC D
+    case 0x03:
+        Rlc(registers->e, true);
+        return 8; // RLC E
+    case 0x04:
+        Rlc(registers->h, true);
+        return 8; // RLC H
+    case 0x05:
+        Rlc(registers->l, true);
+        return 8; // RLC L
+    case 0x06:
+        value = memory->Read(registers->hl);
+        Rlc(value, true);
+        memory->Write(registers->hl, value);
+        return 16; // RLC (HL)
+    case 0x07:
+        Rlc(registers->a, true);
+        return 8; // RLC A
+    case 0x08:
+        Rrc(registers->b, true);
+        return 8; // RRC B
+    case 0x09:
+        Rrc(registers->c, true);
+        return 8; // RRC C
+    case 0x0A:
+        Rrc(registers->d, true);
+        return 8; // RRC D
+    case 0x0B:
+        Rrc(registers->e, true);
+        return 8; // RRC E
+    case 0x0C:
+        Rrc(registers->h, true);
+        return 8; // RRC H
+    case 0x0D:
+        Rrc(registers->l, true);
+        return 8; // RRC L
+    case 0x0E:
+        value = memory->Read(registers->hl);
+        Rrc(value, true);
+        memory->Write(registers->hl, value);
+        return 16; // RRC (HL)
+    case 0x0F:
+        Rrc(registers->a, true);
+        return 8; // RRC A
+    case 0x10:
+        Rl(registers->b, true);
+        return 8; // RL B
+    case 0x11:
+        Rl(registers->c, true);
+        return 8; // RL C
+    case 0x12:
+        Rl(registers->d, true);
+        return 8; // RL D
+    case 0x13:
+        Rl(registers->e, true);
+        return 8; // RL E
+    case 0x14:
+        Rl(registers->h, true);
+        return 8; // RL H
+    case 0x15:
+        Rl(registers->l, true);
+        return 8; // RL L
+    case 0x16:
+        value = memory->Read(registers->hl);
+        Rl(value, true);
+        memory->Write(registers->hl, value);
+        return 16; // RL (HL)
+    case 0x17:
+        Rl(registers->a, true);
+        return 8; // RL A
+    case 0x18:
+        Rr(registers->b, true);
+        return 8; // RR B
+    case 0x19:
+        Rr(registers->c, true);
+        return 8; // RR C
+    case 0x1A:
+        Rr(registers->d, true);
+        return 8; // RR D
+    case 0x1B:
+        Rr(registers->e, true);
+        return 8; // RR E
+    case 0x1C:
+        Rr(registers->h, true);
+        return 8; // RR H
+    case 0x1D:
+        Rr(registers->l, true);
+        return 8; // RR L
+    case 0x1E:
+        value = memory->Read(registers->hl);
+        Rr(value, true);
+        memory->Write(registers->hl, value);
+        return 16; // RR (HL)
+    case 0x1F:
+        Rr(registers->a, true);
+        return 8; // RR A
+    case 0x20:
+        Sla(registers->b);
+        return 8; // SLA B
+    case 0x21:
+        Sla(registers->c);
+        return 8; // SLA C
+    case 0x22:
+        Sla(registers->d);
+        return 8; // SLA D
+    case 0x23:
+        Sla(registers->e);
+        return 8; // SLA E
+    case 0x24:
+        Sla(registers->h);
+        return 8; // SLA H
+    case 0x25:
+        Sla(registers->l);
+        return 8; // SLA L
+    case 0x26:
+        value = memory->Read(registers->hl);
+        Sla(value);
+        memory->Write(registers->hl, value);
+        return 16; // SLA (HL)
+    case 0x27:
+        Sla(registers->a);
+        return 8; // SLA A
+    case 0x28:
+        Sra(registers->b);
+        return 8; // SRA B
+    case 0x29:
+        Sra(registers->c);
+        return 8; // SRA C
+    case 0x2A:
+        Sra(registers->d);
+        return 8; // SRA D
+    case 0x2B:
+        Sra(registers->e);
+        return 8; // SRA E
+    case 0x2C:
+        Sra(registers->h);
+        return 8; // SRA H
+    case 0x2D:
+        Sra(registers->l);
+        return 8; // SRA L
+    case 0x2E:
+        value = memory->Read(registers->hl);
+        Sra(value);
+        memory->Write(registers->hl, value);
+        return 16; // SRA (HL)
+    case 0x2F:
+        Sra(registers->a);
+        return 8; // SRA A
+    case 0x30:
+        Swap(registers->b);
+        return 8; // SWAP B
+    case 0x31:
+        Swap(registers->c);
+        return 8; // SWAP C
+    case 0x32:
+        Swap(registers->d);
+        return 8; // SWAP D
+    case 0x33:
+        Swap(registers->e);
+        return 8; // SWAP E
+    case 0x34:
+        Swap(registers->h);
+        return 8; // SWAP H
+    case 0x35:
+        Swap(registers->l);
+        return 8; // SWAP L
+    case 0x36:
+        value = memory->Read(registers->hl);
+        Swap(value);
+        memory->Write(registers->hl, value);
+        return 16; // SWAP (HL)
+    case 0x37:
+        Swap(registers->a);
+        return 8; // SWAP A
+    case 0x38:
+        Srl(registers->b);
+        return 8; // SRL B
+    case 0x39:
+        Srl(registers->c);
+        return 8; // SRL C
+    case 0x3A:
+        Srl(registers->d);
+        return 8; // SRL D
+    case 0x3B:
+        Srl(registers->e);
+        return 8; // SRL E
+    case 0x3C:
+        Srl(registers->h);
+        return 8; // SRL H
+    case 0x3D:
+        Srl(registers->l);
+        return 8; // SRL L
+    case 0x3E:
+        value = memory->Read(registers->hl);
+        Srl(value);
+        memory->Write(registers->hl, value);
+        return 16; // SRL (HL)
+    case 0x3F:
+        Srl(registers->a);
+        return 8; // SRL A
+    case 0x40:
+        Bit(registers->b, 0x01);
+        return 8; // BIT 0,B
+    case 0x41:
+        Bit(registers->c, 0x01);
+        return 8; // BIT 0,C
+    case 0x42:
+        Bit(registers->d, 0x01);
+        return 8; // BIT 0,D
+    case 0x43:
+        Bit(registers->e, 0x01);
+        return 8; // BIT 0,E
+    case 0x44:
+        Bit(registers->h, 0x01);
+        return 8; // BIT 0,H
+    case 0x45:
+        Bit(registers->l, 0x01);
+        return 8; // BIT 0,L
+    case 0x46:
+        value = memory->Read(registers->hl);
+        Bit(value, 0x01);
+        return 12; // BIT 0,(HL)
+    case 0x47:
+        Bit(registers->a, 0x01);
+        return 8; // BIT 0,A
+    case 0x48:
+        Bit(registers->b, 0x02);
+        return 8; // BIT 1,B
+    case 0x49:
+        Bit(registers->c, 0x02);
+        return 8; // BIT 1,C
+    case 0x4A:
+        Bit(registers->d, 0x02);
+        return 8; // BIT 1,D
+    case 0x4B:
+        Bit(registers->e, 0x02);
+        return 8; // BIT 1,E
+    case 0x4C:
+        Bit(registers->h, 0x02);
+        return 8; // BIT 1,H
+    case 0x4D:
+        Bit(registers->l, 0x02);
+        return 8; // BIT 1,L
+    case 0x4E:
+        value = memory->Read(registers->hl);
+        Bit(value, 0x02);
+        return 12; // BIT 1,(HL)
+    case 0x4F:
+        Bit(registers->a, 0x02);
+        return 8; // BIT 1,A
+    case 0x50:
+        Bit(registers->b, 0x04);
+        return 8; // BIT 2,B
+    case 0x51:
+        Bit(registers->c, 0x04);
+        return 8; // BIT 2,C
+    case 0x52:
+        Bit(registers->d, 0x04);
+        return 8; // BIT 2,D
+    case 0x53:
+        Bit(registers->e, 0x04);
+        return 8; // BIT 2,E
+    case 0x54:
+        Bit(registers->h, 0x04);
+        return 8; // BIT 2,H
+    case 0x55:
+        Bit(registers->l, 0x04);
+        return 8; // BIT 2,L
+    case 0x56:
+        value = memory->Read(registers->hl);
+        Bit(value, 0x04);
+        return 12; // BIT 2,(HL)
+    case 0x57:
+        Bit(registers->a, 0x04);
+        return 8; // BIT 2,A
+    case 0x58:
+        Bit(registers->b, 0x08);
+        return 8; // BIT 3,B
+    case 0x59:
+        Bit(registers->c, 0x08);
+        return 8; // BIT 3,C
+    case 0x5A:
+        Bit(registers->d, 0x08);
+        return 8; // BIT 3,D
+    case 0x5B:
+        Bit(registers->e, 0x08);
+        return 8; // BIT 3,E
+    case 0x5C:
+        Bit(registers->h, 0x08);
+        return 8; // BIT 3,H
+    case 0x5D:
+        Bit(registers->l, 0x08);
+        return 8; // BIT 3,L
+    case 0x5E:
+        value = memory->Read(registers->hl);
+        Bit(value, 0x08);
+        return 12; // BIT 3,(HL)
+    case 0x5F:
+        Bit(registers->a, 0x08);
+        return 8; // BIT 3,A
+    case 0x60:
+        Bit(registers->b, 0x10);
+        return 8; // BIT 4,B
+    case 0x61:
+        Bit(registers->c, 0x10);
+        return 8; // BIT 4,C
+    case 0x62:
+        Bit(registers->d, 0x10);
+        return 8; // BIT 4,D
+    case 0x63:
+        Bit(registers->e, 0x10);
+        return 8; // BIT 4,E
+    case 0x64:
+        Bit(registers->h, 0x10);
+        return 8; // BIT 4,H
+    case 0x65:
+        Bit(registers->l, 0x10);
+        return 8; // BIT 4,L
+    case 0x66:
+        value = memory->Read(registers->hl);
+        Bit(value, 0x10);
+        return 12; // BIT 4,(HL)
+    case 0x67:
+        Bit(registers->a, 0x10);
+        return 8; // BIT 4,A
+    case 0x68:
+        Bit(registers->b, 0x20);
+        return 8; // BIT 5,B
+    case 0x69:
+        Bit(registers->c, 0x20);
+        return 8; // BIT 5,C
+    case 0x6A:
+        Bit(registers->d, 0x20);
+        return 8; // BIT 5,D
+    case 0x6B:
+        Bit(registers->e, 0x20);
+        return 8; // BIT 5,E
+    case 0x6C:
+        Bit(registers->h, 0x20);
+        return 8; // BIT 5,H
+    case 0x6D:
+        Bit(registers->l, 0x20);
+        return 8; // BIT 5,L
+    case 0x6E:
+        value = memory->Read(registers->hl);
+        Bit(value, 0x20);
+        return 12; // BIT 5,(HL)
+    case 0x6F:
+        Bit(registers->a, 0x20);
+        return 8; // BIT 5,A
+    case 0x70:
+        Bit(registers->b, 0x40);
+        return 8; // BIT 6,B
+    case 0x71:
+        Bit(registers->c, 0x40);
+        return 8; // BIT 6,C
+    case 0x72:
+        Bit(registers->d, 0x40);
+        return 8; // BIT 6,D
+    case 0x73:
+        Bit(registers->e, 0x40);
+        return 8; // BIT 6,E
+    case 0x74:
+        Bit(registers->h, 0x40);
+        return 8; // BIT 6,H
+    case 0x75:
+        Bit(registers->l, 0x40);
+        return 8; // BIT 6,L
+    case 0x76:
+        value = memory->Read(registers->hl);
+        Bit(value, 0x40);
+        return 12; // BIT 6,(HL)
+    case 0x77:
+        Bit(registers->a, 0x40);
+        return 8; // BIT 6,A
+    case 0x78:
+        Bit(registers->b, 0x80);
+        return 8; // BIT 7,B
+    case 0x79:
+        Bit(registers->c, 0x80);
+        return 8; // BIT 7,C
+    case 0x7A:
+        Bit(registers->d, 0x80);
+        return 8; // BIT 7,D
+    case 0x7B:
+        Bit(registers->e, 0x80);
+        return 8; // BIT 7,E
+    case 0x7C:
+        Bit(registers->h, 0x80);
+        return 8; // BIT 7,H
+    case 0x7D:
+        Bit(registers->l, 0x80);
+        return 8; // BIT 7,L
+    case 0x7E:
+        value = memory->Read(registers->hl);
+        Bit(value, 0x80);
+        return 12; // BIT 7,(HL)
+    case 0x7F:
+        Bit(registers->a, 0x80);
+        return 8; // BIT 7,A
+    case 0x80:
+        Res(registers->b, 0x01);
+        return 8; // RES 0,B
+    case 0x81:
+        Res(registers->c, 0x01);
+        return 8; // RES 0,C
+    case 0x82:
+        Res(registers->d, 0x01);
+        return 8; // RES 0,D
+    case 0x83:
+        Res(registers->e, 0x01);
+        return 8; // RES 0,E
+    case 0x84:
+        Res(registers->h, 0x01);
+        return 8; // RES 0,H
+    case 0x85:
+        Res(registers->l, 0x01);
+        return 8; // RES 0,L
+    case 0x86:
+        value = memory->Read(registers->hl);
+        Res(value, 0x01);
+        memory->Write(registers->hl, value);
+        return 16; // RES 0,(HL)
+    case 0x87:
+        Res(registers->a, 0x01);
+        return 8; // RES 0,A
+    case 0x88:
+        Res(registers->b, 0x02);
+        return 8; // RES 1,B
+    case 0x89:
+        Res(registers->c, 0x02);
+        return 8; // RES 1,C
+    case 0x8A:
+        Res(registers->d, 0x02);
+        return 8; // RES 1,D
+    case 0x8B:
+        Res(registers->e, 0x02);
+        return 8; // RES 1,E
+    case 0x8C:
+        Res(registers->h, 0x02);
+        return 8; // RES 1,H
+    case 0x8D:
+        Res(registers->l, 0x02);
+        return 8; // RES 1,L
+    case 0x8E:
+        value = memory->Read(registers->hl);
+        Res(value, 0x02);
+        memory->Write(registers->hl, value);
+        return 16; // RES 1,(HL)
+    case 0x8F:
+        Res(registers->a, 0x02);
+        return 8; // RES 1,A
+    case 0x90:
+        Res(registers->b, 0x04);
+        return 8; // RES 2,B
+    case 0x91:
+        Res(registers->c, 0x04);
+        return 8; // RES 2,C
+    case 0x92:
+        Res(registers->d, 0x04);
+        return 8; // RES 2,D
+    case 0x93:
+        Res(registers->e, 0x04);
+        return 8; // RES 2,E
+    case 0x94:
+        Res(registers->h, 0x04);
+        return 8; // RES 2,H
+    case 0x95:
+        Res(registers->l, 0x04);
+        return 8; // RES 2,L
+    case 0x96:
+        value = memory->Read(registers->hl);
+        Res(value, 0x04);
+        memory->Write(registers->hl, value);
+        return 16; // RES 2,(HL)
+    case 0x97:
+        Res(registers->a, 0x04);
+        return 8; // RES 2,A
+    case 0x98:
+        Res(registers->b, 0x08);
+        return 8; // RES 3,B
+    case 0x99:
+        Res(registers->c, 0x08);
+        return 8; // RES 3,C
+    case 0x9A:
+        Res(registers->d, 0x08);
+        return 8; // RES 3,D
+    case 0x9B:
+        Res(registers->e, 0x08);
+        return 8; // RES 3,E
+    case 0x9C:
+        Res(registers->h, 0x08);
+        return 8; // RES 3,H
+    case 0x9D:
+        Res(registers->l, 0x08);
+        return 8; // RES 3,L
+    case 0x9E:
+        value = memory->Read(registers->hl);
+        Res(value, 0x08);
+        memory->Write(registers->hl, value);
+        return 16; // RES 3,(HL)
+    case 0x9F:
+        Res(registers->a, 0x08);
+        return 8; // RES 3,A
+    case 0xA0:
+        Res(registers->b, 0x10);
+        return 8; // RES 4,B
+    case 0xA1:
+        Res(registers->c, 0x10);
+        return 8; // RES 4,C
+    case 0xA2:
+        Res(registers->d, 0x10);
+        return 8; // RES 4,D
+    case 0xA3:
+        Res(registers->e, 0x10);
+        return 8; // RES 4,E
+    case 0xA4:
+        Res(registers->h, 0x10);
+        return 8; // RES 4,H
+    case 0xA5:
+        Res(registers->l, 0x10);
+        return 8; // RES 4,L
+    case 0xA6:
+        value = memory->Read(registers->hl);
+        Res(value, 0x10);
+        memory->Write(registers->hl, value);
+        return 16; // RES 4,(HL)
+    case 0xA7:
+        Res(registers->a, 0x10);
+        return 8; // RES 4,A
+    case 0xA8:
+        Res(registers->b, 0x20);
+        return 8; // RES 5,B
+    case 0xA9:
+        Res(registers->c, 0x20);
+        return 8; // RES 5,C
+    case 0xAA:
+        Res(registers->d, 0x20);
+        return 8; // RES 5,D
+    case 0xAB:
+        Res(registers->e, 0x20);
+        return 8; // RES 5,E
+    case 0xAC:
+        Res(registers->h, 0x20);
+        return 8; // RES 5,H
+    case 0xAD:
+        Res(registers->l, 0x20);
+        return 8; // RES 5,L
+    case 0xAE:
+        value = memory->Read(registers->hl);
+        Res(value, 0x20);
+        memory->Write(registers->hl, value);
+        return 16; // RES 5,(HL)
+    case 0xAF:
+        Res(registers->a, 0x20);
+        return 8; // RES 5,A
+    case 0xB0:
+        Res(registers->b, 0x40);
+        return 8; // RES 6,B
+    case 0xB1:
+        Res(registers->c, 0x40);
+        return 8; // RES 6,C
+    case 0xB2:
+        Res(registers->d, 0x40);
+        return 8; // RES 6,D
+    case 0xB3:
+        Res(registers->e, 0x40);
+        return 8; // RES 6,E
+    case 0xB4:
+        Res(registers->h, 0x40);
+        return 8; // RES 6,H
+    case 0xB5:
+        Res(registers->l, 0x40);
+        return 8; // RES 6,L
+    case 0xB6:
+        value = memory->Read(registers->hl);
+        Res(value, 0x40);
+        memory->Write(registers->hl, value);
+        return 16; // RES 6,(HL)
+    case 0xB7:
+        Res(registers->a, 0x40);
+        return 8; // RES 6,A
+    case 0xB8:
+        Res(registers->b, 0x80);
+        return 8; // RES 7,B
+    case 0xB9:
+        Res(registers->c, 0x80);
+        return 8; // RES 7,C
+    case 0xBA:
+        Res(registers->d, 0x80);
+        return 8; // RES 7,D
+    case 0xBB:
+        Res(registers->e, 0x80);
+        return 8; // RES 7,E
+    case 0xBC:
+        Res(registers->h, 0x80);
+        return 8; // RES 7,H
+    case 0xBD:
+        Res(registers->l, 0x80);
+        return 8; // RES 7,L
+    case 0xBE:
+        value = memory->Read(registers->hl);
+        Res(value, 0x80);
+        memory->Write(registers->hl, value);
+        return 16; // RES 7,(HL)
+    case 0xBF:
+        Res(registers->a, 0x80);
+        return 8; // RES 7,A
+    case 0xC0:
+        Set(registers->b, 0x01);
+        return 8; // SET 0,B
+    case 0xC1:
+        Set(registers->c, 0x01);
+        return 8; // SET 0,C
+    case 0xC2:
+        Set(registers->d, 0x01);
+        return 8; // SET 0,D
+    case 0xC3:
+        Set(registers->e, 0x01);
+        return 8; // SET 0,E
+    case 0xC4:
+        Set(registers->h, 0x01);
+        return 8; // SET 0,H
+    case 0xC5:
+        Set(registers->l, 0x01);
+        return 8; // SET 0,L
+    case 0xC6:
+        value = memory->Read(registers->hl);
+        Set(value, 0x01);
+        memory->Write(registers->hl, value);
+        return 16; // SET 0,(HL)
+    case 0xC7:
+        Set(registers->a, 0x01);
+        return 8; // SET 0,A
+    case 0xC8:
+        Set(registers->b, 0x02);
+        return 8; // SET 1,B
+    case 0xC9:
+        Set(registers->c, 0x02);
+        return 8; // SET 1,C
+    case 0xCA:
+        Set(registers->d, 0x02);
+        return 8; // SET 1,D
+    case 0xCB:
+        Set(registers->e, 0x02);
+        return 8; // SET 1,E
+    case 0xCC:
+        Set(registers->h, 0x02);
+        return 8; // SET 1,H
+    case 0xCD:
+        Set(registers->l, 0x02);
+        return 8; // SET 1,L
+    case 0xCE:
+        value = memory->Read(registers->hl);
+        Set(value, 0x02);
+        memory->Write(registers->hl, value);
+        return 16; // SET 1,(HL)
+    case 0xCF:
+        Set(registers->a, 0x02);
+        return 8; // SET 1,A
+    case 0xD0:
+        Set(registers->b, 0x04);
+        return 8; // SET 2,B
+    case 0xD1:
+        Set(registers->c, 0x04);
+        return 8; // SET 2,C
+    case 0xD2:
+        Set(registers->d, 0x04);
+        return 8; // SET 2,D
+    case 0xD3:
+        Set(registers->e, 0x04);
+        return 8; // SET 2,E
+    case 0xD4:
+        Set(registers->h, 0x04);
+        return 8; // SET 2,H
+    case 0xD5:
+        Set(registers->l, 0x04);
+        return 8; // SET 2,L
+    case 0xD6:
+        value = memory->Read(registers->hl);
+        Set(value, 0x04);
+        memory->Write(registers->hl, value);
+        return 16; // SET 2,(HL)
+    case 0xD7:
+        Set(registers->a, 0x04);
+        return 8; // SET 2,A
+    case 0xD8:
+        Set(registers->b, 0x08);
+        return 8; // SET 3,B
+    case 0xD9:
+        Set(registers->c, 0x08);
+        return 8; // SET 3,C
+    case 0xDA:
+        Set(registers->d, 0x08);
+        return 8; // SET 3,D
+    case 0xDB:
+        Set(registers->e, 0x08);
+        return 8; // SET 3,E
+    case 0xDC:
+        Set(registers->h, 0x08);
+        return 8; // SET 3,H
+    case 0xDD:
+        Set(registers->l, 0x08);
+        return 8; // SET 3,L
+    case 0xDE:
+        value = memory->Read(registers->hl);
+        Set(value, 0x08);
+        memory->Write(registers->hl, value);
+        return 16; // SET 3,(HL)
+    case 0xDF:
+        Set(registers->a, 0x08);
+        return 8; // SET 3,A
+    case 0xE0:
+        Set(registers->b, 0x10);
+        return 8; // SET 4,B
+    case 0xE1:
+        Set(registers->c, 0x10);
+        return 8; // SET 4,C
+    case 0xE2:
+        Set(registers->d, 0x10);
+        return 8; // SET 4,D
+    case 0xE3:
+        Set(registers->e, 0x10);
+        return 8; // SET 4,E
+    case 0xE4:
+        Set(registers->h, 0x10);
+        return 8; // SET 4,H
+    case 0xE5:
+        Set(registers->l, 0x10);
+        return 8; // SET 4,L
+    case 0xE6:
+        value = memory->Read(registers->hl);
+        Set(value, 0x10);
+        memory->Write(registers->hl, value);
+        return 16; // SET 4,(HL)
+    case 0xE7:
+        Set(registers->a, 0x10);
+        return 8; // SET 4,A
+    case 0xE8:
+        Set(registers->b, 0x20);
+        return 8; // SET 5,B
+    case 0xE9:
+        Set(registers->c, 0x20);
+        return 8; // SET 5,C
+    case 0xEA:
+        Set(registers->d, 0x20);
+        return 8; // SET 5,D
+    case 0xEB:
+        Set(registers->e, 0x20);
+        return 8; // SET 5,E
+    case 0xEC:
+        Set(registers->h, 0x20);
+        return 8; // SET 5,H
+    case 0xED:
+        Set(registers->l, 0x20);
+        return 8; // SET 5,L
+    case 0xEE:
+        value = memory->Read(registers->hl);
+        Set(value, 0x20);
+        memory->Write(registers->hl, value);
+        return 16; // SET 5,(HL)
+    case 0xEF:
+        Set(registers->a, 0x20);
+        return 8; // SET 5,A
+    case 0xF0:
+        Set(registers->b, 0x40);
+        return 8; // SET 6,B
+    case 0xF1:
+        Set(registers->c, 0x40);
+        return 8; // SET 6,C
+    case 0xF2:
+        Set(registers->d, 0x40);
+        return 8; // SET 6,D
+    case 0xF3:
+        Set(registers->e, 0x40);
+        return 8; // SET 6,E
+    case 0xF4:
+        Set(registers->h, 0x40);
+        return 8; // SET 6,H
+    case 0xF5:
+        Set(registers->l, 0x40);
+        return 8; // SET 6,L
+    case 0xF6:
+        value = memory->Read(registers->hl);
+        Set(value, 0x40);
+        memory->Write(registers->hl, value);
+        return 16; // SET 6,(HL)
+    case 0xF7:
+        Set(registers->a, 0x40);
+        return 8; // SET 6,A
+    case 0xF8:
+        Set(registers->b, 0x80);
+        return 8; // SET 7,B
+    case 0xF9:
+        Set(registers->c, 0x80);
+        return 8; // SET 7,C
+    case 0xFA:
+        Set(registers->d, 0x80);
+        return 8; // SET 7,D
+    case 0xFB:
+        Set(registers->e, 0x80);
+        return 8; // SET 7,E
+    case 0xFC:
+        Set(registers->h, 0x80);
+        return 8; // SET 7,H
+    case 0xFD:
+        Set(registers->l, 0x80);
+        return 8; // SET 7,L
+    case 0xFE:
+        value = memory->Read(registers->hl);
+        Set(value, 0x80);
+        memory->Write(registers->hl, value);
+        return 16; // SET 7,(HL)
+    case 0xFF:
+        Set(registers->a, 0x80);
+        return 8; // SET 7,A
+
+    default:
+        printf("Unknown CB opcode: 0x%02X\n", opcode);
+        return 0; // Unknown CB opcode
+    }
 }
 
 void CPU::Add(uint8_t value)
@@ -1045,18 +1881,20 @@ void CPU::Sbc(uint8_t value)
 
 void CPU::Inc(uint8_t &value)
 {
+    registers->WriteFlag(Flag::H, ((value & 0x0F) == 0x0F));
+
     value++;
     registers->WriteFlag(Flag::Z, value == 0);
     registers->WriteFlag(Flag::N, false);
-    registers->WriteFlag(Flag::H, ((value & 0x0F) == 0x0F));
 }
 
 void CPU::Dec(uint8_t &value)
 {
+    registers->WriteFlag(Flag::H, (value & 0xF) == 0);
+
     value--;
     registers->WriteFlag(Flag::Z, value == 0);
     registers->WriteFlag(Flag::N, true);
-    registers->WriteFlag(Flag::H, (value & 0xF) == 0xF);
 }
 
 void CPU::And(uint8_t value)
@@ -1158,14 +1996,133 @@ void CPU::Rrc(uint8_t &value, bool isPrefixCB)
     registers->WriteFlag(Flag::C, isLastBit);
 }
 
+void CPU::Sla(uint8_t &value)
+{
+    bool isLastBit = (value & 0x80) != 0;
+    value <<= 1;
+
+    registers->WriteFlag(Flag::Z, value == 0);
+    registers->WriteFlag(Flag::N, false);
+    registers->WriteFlag(Flag::H, false);
+    registers->WriteFlag(Flag::C, isLastBit);
+}
+
+void CPU::Sra(uint8_t &value)
+{
+    bool bit0 = value & 0x01;
+    bool bit7 = value & 0x80;
+
+    value >>= 1;
+    value |= bit7;
+
+    registers->WriteFlag(Flag::Z, value == 0);
+    registers->WriteFlag(Flag::N, false);
+    registers->WriteFlag(Flag::H, false);
+    registers->WriteFlag(Flag::C, bit0);
+}
+
+void CPU::Srl(uint8_t &value)
+{
+    bool bit0 = value & 0x01;
+
+    value >>= 1;
+
+    registers->WriteFlag(Flag::Z, value == 0);
+    registers->WriteFlag(Flag::N, false);
+    registers->WriteFlag(Flag::H, false);
+    registers->WriteFlag(Flag::C, bit0);
+}
+
+void CPU::Swap(uint8_t &value)
+{
+    value = (value << 4) | (value >> 4);
+
+    registers->WriteFlag(Flag::Z, value == 0);
+    registers->WriteFlag(Flag::N, false);
+    registers->WriteFlag(Flag::H, false);
+    registers->WriteFlag(Flag::C, false);
+}
+
+void CPU::Bit(uint8_t &value, uint8_t bit)
+{
+    registers->WriteFlag(Flag::Z, (value & bit) == 0);
+    registers->WriteFlag(Flag::N, false);
+    registers->WriteFlag(Flag::H, true);
+}
+
+void CPU::Res(uint8_t &value, uint8_t bit)
+{
+    value &= ~bit;
+}
+
+void CPU::Set(uint8_t &value, uint8_t bit)
+{
+    value |= bit;
+}
+
 void CPU::CheckInterrupts()
 {
-    uint8_t IE = memory->Read(0xFFFF);
-    uint8_t IF = memory->Read(0xFF0F);
+    if (!ime)
+        return;
+
+    uint8_t ie = memory->Read(0xFFFF);
+    uint8_t iflag = memory->Read(0xFF0F);
+
+    uint8_t interrupts = ie & iflag & 0x1F;
+
+    if (interrupts == 0)
+        return;
+
+    ime = false;
+    isHalted = false;
+
+    memory->Write(--registers->sp, (registers->pc >> 8) & 0xFF);
+    memory->Write(--registers->sp, registers->pc & 0xFF);
+
+    if (interrupts & 0x01)
+    {
+        registers->pc = 0x0040;
+        memory->Write(0xFF0F, iflag & ~0x01);
+    }
+    else if (interrupts & 0x02)
+    {
+        registers->pc = 0x0048;
+        memory->Write(0xFF0F, iflag & ~0x02);
+    }
+    else if (interrupts & 0x04)
+    {
+        registers->pc = 0x0050;
+        memory->Write(0xFF0F, iflag & ~0x04);
+    }
+    else if (interrupts & 0x08)
+    {
+        registers->pc = 0x0058;
+        memory->Write(0xFF0F, iflag & ~0x08);
+    }
+    else if (interrupts & 0x10)
+    {
+        registers->pc = 0x0060;
+        memory->Write(0xFF0F, iflag & ~0x10);
+    }
 }
 
 int CPU::Step()
 {
+    if (isHalted)
+    {
+        uint8_t ie = memory->Read(0xFFFF);
+        uint8_t iflag = memory->Read(0xFF0F);
+        if (ie & iflag & 0x1F)
+        {
+            isHalted = false;
+        }
+        else
+        {
+            cycles += 4;
+            return 4;
+        }
+    }
+
     uint8_t opcode = memory->Read(registers->pc++);
     int instructionCycles = Execute(opcode);
     cycles += instructionCycles;

@@ -1,9 +1,8 @@
 #include "emulator.h"
-#include "mmu.h"
 #include <iostream>
 #include <string>
 
-Emulator::Emulator() : window(nullptr), renderer(nullptr), screen(nullptr), isEmulatorWindowOpen(false), cartridge(nullptr), memory(nullptr), cpu(nullptr) {}
+Emulator::Emulator() : window(nullptr), renderer(nullptr), screen(nullptr), isEmulatorWindowOpen(false), cartridge(nullptr), memory(nullptr), cpu(nullptr), ppu(nullptr) {}
 
 Emulator::~Emulator()
 {
@@ -70,10 +69,16 @@ void Emulator::LoadCartridge(Cartridge *cartridge)
         delete cpu;
         cpu = nullptr;
     }
+    if (ppu)
+    {
+        delete ppu;
+        ppu = nullptr;
+    }
 
     this->cartridge = cartridge;
     memory = new MMU(cartridge);
     cpu = new CPU(memory, &registers);
+    ppu = new PPU(memory, renderer);
 
     SDL_SetWindowTitle(window, cartridge->GetTitle().c_str());
 
@@ -85,15 +90,10 @@ void Emulator::RunStep()
     if (!status.isPaused || status.doStep)
     {
         int cycle = cpu->Step();
+        cpu->CheckInterrupts();
     }
 
-    // status.doStep = false;
-
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-
-    SDL_RenderClear(renderer);
-
-    SDL_RenderPresent(renderer);
+    ppu->Step(cpu->cycles);
 }
 
 void Emulator::Run()
@@ -157,6 +157,11 @@ void Emulator::Cleanup()
     {
         delete memory;
         memory = nullptr;
+    }
+    if (ppu)
+    {
+        delete ppu;
+        ppu = nullptr;
     }
 
     if (renderer)

@@ -19,6 +19,7 @@ public:
     bool isHalted = false;
 
     int Execute(uint8_t opcode);
+    int ExecuteCB(uint8_t opcode);
     void CheckInterrupts();
     int Step();
 
@@ -38,4 +39,11 @@ public:
     void Rlc(uint8_t &value, bool isPrefixCB);
     void Rr(uint8_t &value, bool isPrefixCB);
     void Rrc(uint8_t &value, bool isPrefixCB);
+    void Swap(uint8_t &value);
+    void Sla(uint8_t &value);
+    void Sra(uint8_t &value);
+    void Srl(uint8_t &value);
+    void Bit(uint8_t &value, uint8_t bit);
+    void Res(uint8_t &value, uint8_t bit);
+    void Set(uint8_t &value, uint8_t bit);
 };

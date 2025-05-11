@@ -5,6 +5,7 @@
 #include "mmu.h"
 #include "status.h"
 #include "registers.h"
+#include "ppu.h"
 
 class Emulator
 {
@@ -41,6 +42,7 @@ public:
     Cartridge *cartridge;
     MMU *memory;
     CPU *cpu;
+    PPU *ppu;
 
 private:
     void HandleEvents();
